@@ -15,20 +15,18 @@ def log_ghost():
     try:
         os.makedirs("logs", exist_ok=True)
 
-        # Try parsing the request body
-        if request.is_json:
-            data = request.get_json()
-        else:
-            try:
-                data = json.loads(request.data.decode("utf-8"))
-            except Exception as e:
-                return jsonify({"status": "error", "message": "Invalid JSON"}), 400
+        raw_data = request.data.decode("utf-8").strip()
+        if not raw_data:
+            return jsonify({"status": "error", "message": "Empty body"}), 400
 
-        # Always add IP + timestamp
+        try:
+            data = json.loads(raw_data)
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"JSON decode error: {str(e)}"}), 400
+
         data["ip"] = request.headers.get("X-Forwarded-For", request.remote_addr)
         data["timestamp"] = datetime.utcnow().isoformat()
 
-        # Write to log
         with open(LOG_FILE, "a") as f:
             f.write(json.dumps(data) + "\n")
 
