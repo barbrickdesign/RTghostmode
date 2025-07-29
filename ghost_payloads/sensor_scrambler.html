@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sensor Scrambler MAX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    #flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+  </style>
+</head>
+<body>
+  <div id="flash"></div>
+  <img id="overlay" src="your_art.png" alt="art">
+
+  <script>
+    // Start all effects immediately
+    window.onload = () => {
+      vibrateLoop();
+      spamSensors();
+      flashScreen();
+      blastNoise();
+      randomizeBackground();
+    };
+
+    function vibrateLoop() {
+      if (navigator.vibrate) {
+        setInterval(() => navigator.vibrate([500, 200, 300, 200]), 1000);
+      }
+    }
+
+    function spamSensors() {
+      window.addEventListener('devicemotion', () => {});
+      window.addEventListener('deviceorientation', () => {});
+      for (let i = 0; i < 500; i++) {
+        console.log(Math.random(), Date.now(), Math.random() * 1337);
+      }
+    }
+
+    function flashScreen() {
+      const flash = document.getElementById("flash");
+      setInterval(() => {
+        flash.style.opacity = flash.style.opacity == "1" ? "0" : "1";
+      }, 80);
+    }
+
+    function blastNoise() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        oscillator.start();
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    function randomizeBackground() {
+      setInterval(() => {
+        document.body.style.backgroundColor = `hsl(${Math.floor(Math.random()*360)}, 100%, 50%)`;
+      }, 500);
+    }
+  </script>
+</body>
+</html>

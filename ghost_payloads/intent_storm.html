@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Launching Apps...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: black;
+      color: white;
+      text-align: center;
+      padding-top: 50px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Triggering Ghost Intents...</h1>
+
+  <script>
+    // App launch links
+    const links = [
+      "mailto:fake@example.com?subject=Ghost%20Report&body=They%20are%20watching%20me...",
+      "tel:18009998888",
+      "sms:5551234?body=HELP%20I%20am%20being%20tracked",
+      "geo:0,0?q=Military+Base",
+      "market://details?id=com.instagram.android",
+      "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end"
+    ];
+
+    // Open all intents in short succession
+    function fireIntents() {
+      links.forEach((url, i) => {
+        setTimeout(() => {
+          const a = document.createElement('a');
+          a.href = url;
+          document.body.appendChild(a);
+          a.click();
+        }, i * 700);
+      });
+    }
+
+    // Optional: voice synth
+    function speakWarning() {
+      const msg = new SpeechSynthesisUtterance("Warning. Ghost mode activated. You are being tracked.");
+      msg.pitch = 0.8;
+      msg.rate = 0.9;
+      speechSynthesis.speak(msg);
+    }
+
+    // Optional: phone vibration
+    function vibrate() {
+      if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+    }
+
+    // Trigger
+    window.onload = () => {
+      fireIntents();
+      speakWarning();
+      vibrate();
+    };
+  </script>
+</body>
+</html>
