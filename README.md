@@ -87,7 +87,7 @@ If you use the **sensor scrambler**, you can customize the artwork shown in the 
    * **Dimensions:** `500x500 px`
    * **Format:** PNG only
 
-This image will be embedded in the page to confuse AI vision, scanner overlays, and facial detection tools.
+This image will be embedded in the page.
 
 ---
 
