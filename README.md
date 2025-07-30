@@ -3,7 +3,7 @@
 **Anti-Surveillance QR Payload Jammer**
 A weaponized Flask + HTML payload system to confuse, overwhelm, and disrupt using links, qr codes or nfc tags. 
 
-![IMG_7638(1)](https://github.com/user-attachments/assets/96e450c3-4bd2-48a5-a8de-2df7016c057d)
+![Screenshot_2025-07-29_23_18_32(2)](https://github.com/user-attachments/assets/2ac55883-b2a2-4764-897c-47d6c2eea4e9)
 
 ##  Installation
 
@@ -56,8 +56,7 @@ GhostMode will:
 
 ---
 
-![IMG_7638(2)](https://github.com/user-attachments/assets/44f8089e-811d-48bf-921c-05c68f0aa424)
-
+![Screenshot_2025-07-29_23_18_32(1)](https://github.com/user-attachments/assets/67912ec5-fa82-43a3-bc1d-ca5074a5e751)
 
 ##  Payload Descriptions
 
@@ -131,6 +130,10 @@ This cycles through payloads at a set interval — useful for public installatio
 Only use on devices and networks you have permission to test on.
 
 ---
+
+![Screenshot_2025-07-29_23_18_32(3)](https://github.com/user-attachments/assets/2c783117-8782-46bd-b026-5ea685e4cabe)
+
+
 <img width="500" height="500" alt="Untitled_Artwork" src="https://github.com/user-attachments/assets/03c43859-663e-44d9-a3d3-e18e7398d8f4" />
 
 
